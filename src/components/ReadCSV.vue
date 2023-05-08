@@ -104,16 +104,14 @@
 <script lang="js">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
-import jsonData from '../assets/data/data.json'
-import dataNormalized from '../assets/data/data_normalized.json'
-import dataQGIS from '../assets/data/data_with_districts.json'
+import jsonData from '../assets/data/all_data_20230508.json'
+
 
 export default defineComponent({
     name: "ReadCSV",
         data(){
         return {
-            data: dataNormalized,
-            observations: dataQGIS,
+            data: jsonData,
             selected: {
                 region: null,
                 state: null,
@@ -125,7 +123,27 @@ export default defineComponent({
     },
     computed:{
         location_group(){
-            return d3.groups(this.observations, d=> d.region, d => d.state, d => d.district)
+            // console.log(d3.groups(this.observations, d => `${d.state}-${d.district}`))
+            // return d3.groups(this.observations, d=> d.region, d => d.state, d => d.district)
+            // console.log(this.data.observations[156923716])
+            let district_data = d3.groups(Object.values(this.data.observations), d => d.district_id)
+            let op = {}
+            district_data.map((d) => {
+                let current_district = this.data.districts[d[0]]
+                if(op[current_district.region] == undefined){
+                    op[current_district.region] = {}
+                }
+                if(op[current_district.region][current_district.state] == undefined){
+                    op[current_district.region][current_district.state] = {}
+                }
+                if(op[current_district.region][current_district.state][current_district.district] == undefined){
+                    op[current_district.region][current_district.state][current_district.district] = []
+                }
+                op[current_district.region][current_district.state][current_district.district] = d[1]
+            })
+
+            console.log(op)
+            return op
         }
     },
     methods:{
