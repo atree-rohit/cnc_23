@@ -59,38 +59,38 @@
         </div>
         <div
             class="region-wrapper"
-            v-for="region in location_group"
-            :key="region[0]"
+            v-for="(region_data, region_name) in location_group"
+            :key="region_name"
         >
-            <div class="region-title" @click="selected.region = selected.region == region[0] ? null: region[0]">
-                <div class="name">{{region[0]}}</div>
-                <div class="children">{{ getRegionObservations(region[1]).length }}</div>
-                <div class="users">{{ getRegionUsers(region[1]).length }}</div>
-                <div class="taxa">{{ getRegionTaxa(region[1]).length }}</div>
+            <div class="region-title" @click="selected.region = selected.region == region_name ? null: region_name">
+                <div class="name">{{region_name}}</div>
+                <div class="children">{{ getObservations("region", region_data) }}</div>
+                <div class="users">{{ getUsers("region", region_data).length }}</div>
+                <div class="taxa">{{ getTaxa("region", region_data).length }}</div>
             </div>
-            <div class="region-data" v-if="selected.region == region[0]">
+            <div class="region-data" v-if="selected.region == region_name">
                 <div
                     class="state-wrapper"
-                    v-for="state in region[1]"
-                    :key="state[0]"
+                    v-for="(state_data, state_name) in region_data"
+                    :key="state_name"
                 >
-                    <div class="state-title" @click="selected.state = selected.state == state[0] ? null: state[0]">
-                        <div class="name">{{ state[0] }}</div>
-                        <div class="children">{{ getStateObservations(state[1]).length }}</div>
-                        <div class="users">{{ getStateUsers(state[1]).length }}</div>
-                        <div class="taxa">{{ getStateTaxa(state[1]).length }}</div>
+                    <div class="state-title" @click="selected.state = selected.state == state_name ? null: state_name">
+                        <div class="name">{{ state_name }}</div>
+                        <div class="children">{{ getObservations("state", state_data) }}</div>
+                        <div class="users">{{ getUsers("state", state_data).length }}</div>
+                        <div class="taxa">{{ getTaxa("state", state_data).length }}</div>
                     </div>
-                    <div class="state-data" v-if="selected.state == state[0]">
+                    <div class="state-data" v-if="selected.state == state_name">
                         <div
                             class="district-wrapper"
-                            v-for="district in state[1]" 
-                            :key="district[0]"
+                            v-for="(district_data, district_name) in state_data" 
+                            :key="district_name"
                         >
                             <div class="district-title">
-                                <div class="name">{{district[0]}}</div>
-                                <div class="observations">{{ district[1].length }}</div>
-                                <div class="users">{{ getDistrictUsers(district[1]).length }}</div>
-                                <div class="taxa">{{ getDistrictTaxa(district[1]).length }}</div>
+                                <div class="name">{{district_name}}</div>
+                                <div class="observations">{{ district_data.length }}</div>
+                                <div class="users">{{ getUsers("district", district_data).length }}</div>
+                                <div class="taxa">{{ getTaxa("district", district_data).length }}</div>
                             </div>
 
                         </div>
@@ -104,7 +104,7 @@
 <script lang="js">
 import { defineComponent } from 'vue'
 import * as d3 from 'd3'
-import jsonData from '../assets/data/all_data_20230508.json'
+import jsonData from '../assets/data/all_data_20230510.json'
 
 
 export default defineComponent({
@@ -123,13 +123,13 @@ export default defineComponent({
     },
     computed:{
         location_group(){
-            // console.log(d3.groups(this.observations, d => `${d.state}-${d.district}`))
-            // return d3.groups(this.observations, d=> d.region, d => d.state, d => d.district)
-            // console.log(this.data.observations[156923716])
             let district_data = d3.groups(Object.values(this.data.observations), d => d.district_id)
             let op = {}
             district_data.map((d) => {
                 let current_district = this.data.districts[d[0]]
+                if(current_district == undefined){
+                    console.log(d)
+                }
                 if(op[current_district.region] == undefined){
                     op[current_district.region] = {}
                 }
@@ -142,35 +142,76 @@ export default defineComponent({
                 op[current_district.region][current_district.state][current_district.district] = d[1]
             })
 
-            console.log(op)
+            // console.log(op)
             return op
         }
     },
     methods:{
+        getObservations(type, data){
+            let no_of_observations = -1
+            if(type == "region"){
+                no_of_observations = Object.values(data).reduce((acc, item) => {
+                    const childArrays = Object.values(item)
+                    const childArrayLengths = childArrays.map(arr => arr.length)
+                    const totalLength = childArrayLengths.reduce((sum, length) => sum + length, 0)
+                    return acc + totalLength
+                }, 0)
+            } else if(type == "state"){
+                no_of_observations = Object.values(data).reduce((acc, item) => {
+                    const childArrays = Object.values(item)
+                    const totalLength = childArrays.length
+                    return acc + totalLength
+                }, 0)
+            } else if(type == "district"){
+                no_of_observations = data.length
+            }
+            return no_of_observations
+            // return [...new Set(region_data.map((d) => d[1]).flat().map((d) => d[1]).flat())]
+        },
+        getUsers(type, data){
+            let all_users = []
+            if(type == "region"){
+                Object.values(data).forEach((state) => {
+                    Object.values(state).forEach((district) => {
+                        all_users.push(...this.getDistrictUsers(district))
+                    })
+                })
+            } else if(type == "state"){
+                Object.values(data).forEach((district) => {
+                    all_users.push(...this.getDistrictUsers(district))
+                })
+            } else if(type == "district"){
+                all_users.push(...this.getDistrictUsers(data))
+            }
+            return [...new Set(all_users)]
+        },
+        getTaxa(type, data){
+            let all_taxa_ids = []
+            if(type == "region"){
+                Object.values(data).forEach((state) => {
+                    Object.values(state).forEach((district) => {
+                        all_taxa_ids.push(...this.getDistrictTaxa(district))
+                    })
+                })
+            } else if(type == "state"){
+                Object.values(data).forEach((district) => {
+                    all_taxa_ids.push(...this.getDistrictTaxa(district))
+                })
+            } else if(type == "district"){
+                all_taxa_ids = this.getDistrictTaxa(data)
+            }
+            return [...new Set(all_taxa_ids)]
+        },
+
+
         getDistrictUsers(district_data){
             return [...new Set(district_data.map((d) => d.user_id))]
-        },
-        getStateUsers(state_data){
-            return [...new Set(state_data.map((d) => d[1]).flat().map((d) => d.user_id))]
-        },
-        getRegionUsers(region_data){
-            return [...new Set(region_data.map((d) => d[1]).flat().map((d) => d[1]).flat().map((d) => d.user_id))]
-        },
-        getStateObservations(state_data){
-            return [...new Set(state_data.map((d) => d[1]).flat())]
-        },
-        getRegionObservations(region_data){
-            return [...new Set(region_data.map((d) => d[1]).flat().map((d) => d[1]).flat())]
         },
         getDistrictTaxa(district_data){
             return [...new Set(district_data.map((d) => d.taxon_id))]
         },
-        getStateTaxa(state_data){
-            return [...new Set(state_data.map((d) => d[1]).flat().map((d) => d.taxon_id))]
-        },
-        getRegionTaxa(region_data){
-            return [...new Set(region_data.map((d) => d[1]).flat().map((d) => d[1]).flat().map((d) => d.taxon_id))]
-        },
+
+        
         initData(){
             let observations = {}
             let users = {}
