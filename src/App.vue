@@ -1,5 +1,5 @@
 <template>
-  <ReadCSV msg="Vite + Vue" />
+  <ReadCSV />
 </template>
 
 <script setup lang="ts">
