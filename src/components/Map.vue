@@ -9,8 +9,9 @@
 <script lang="js">
 import { defineComponent } from 'vue'
 import {mapState} from 'vuex'
-import districts from '../assets/data/districts_fixed.json'
+import districts from '../assets/data/districts_rewind.json'
 import * as d3 from 'd3'
+import * as d3Legend from "d3-svg-legend"
 
 export default defineComponent({
     name: "Map",
@@ -54,15 +55,15 @@ export default defineComponent({
 			return str ? str.charAt(0).toUpperCase() + str.slice(1) : ""
 		},
         color_polygon(polygon) {
-			let mode = this.mapModes[this.mapMode].toLowerCase()
-            let op
-			if(this.mapMode < 3){
-				op = this.colors(this.areaStats[mode][polygon[mode]].observations)
-			} else {
-				op = 'hsl(200,100%, 80%)'
-			}
+			// let mode = this.mapModes[this.mapMode].toLowerCase()
+            // let op
+			// if(this.mapMode < 3){
+			// 	op = this.colors(this.areaStats[mode][polygon[mode]].observations)
+			// } else {
+			// 	op = 'hsl(200,100%, 80%)'
+			// }
 			
-            return op
+            return 'hsl(200,100%, 80%)'
         },
         handleZoom(e){
 			this.zoomTransform = e.transform
@@ -244,18 +245,13 @@ export default defineComponent({
 			this.polygons = base.append("g")
 				.classed("polygons", true)
 			
-			if(this.mapMode == 1 && this.selected_area != "All"){
-				console.log("now")
-			}
-			this.mapLayers[this.mapMode].features.forEach((polygon) => {
+			
+			this.json.features.forEach((polygon) => {
 				this.drawPolygon(polygon)
+                // this.drawPolygonLabel(base_text, polygon)
 			})
 
-			if(this.mapMode < 2){
-				this.mapLayers[this.mapMode].features.forEach((polygon) => {
-					this.drawPolygonLabel(base_text, polygon)
-				})					
-			}
+			
 			this.svg.append("g")
 				.attr("transform", "translate("+this.width*.5+", 50)")
 				.call(this.legend)
