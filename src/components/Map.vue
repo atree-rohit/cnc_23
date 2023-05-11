@@ -39,10 +39,7 @@ export default defineComponent({
 		this.init()
     },
     computed:{
-        ...mapState({
-            location_groups: state => state.locationGroups,
-            superlatives: state => state.superlatives,
-        }),
+        ...mapState(["district_data"]),
 		zoom() {
 			return d3.zoom()
 				.scaleExtent([.5, 250])
@@ -92,49 +89,9 @@ export default defineComponent({
 			this.renderMap()
 		},
 		init_area_stats(){
-			["region", "state", "district"].map((s) => this.areaStats[s] = {})
-			this.mapLayers[2].features.forEach((district) => {
-				let props = district.properties
-				if(this.areaStats.region[props.region] == undefined){
-					this.areaStats.region[props.region] = {observations:0, users:new Set(), species: new Set()}
-				}
-				if(this.areaStats.state[props.state] == undefined){
-					this.areaStats.state[props.state] = {observations:0, users:new Set(), species: new Set()}
-				}
-				if(this.areaStats.district[props.district] == undefined){
-					this.areaStats.district[props.district] = {observations:0, users:new Set(), species: new Set()}
-				}
-			})
-			let data = this.filtered_observations.filter((d) => d.district != null)
-			d3.groups(data, o => o.state, o => o.district).map((state) => {
-				let region = ""
-				Object.keys(this.regions).forEach((r) => {
-					if(this.regions[r].indexOf(state[0]) != -1){
-						region = r
-					}
-				})
-				state[1].map((district) => {
-					if(this.areaStats.state[state[0]] == undefined){
-						console.log(2, state)
-					}
-					this.areaStats.district[district[0]].observations = district[1].length
-					this.areaStats.district[district[0]].users = new Set(district[1].map((o) => o.user_id))
-					this.areaStats.district[district[0]].species = new Set(district[1].map((o) => o.taxa_id))
-					this.areaStats.state[state[0]].observations += this.areaStats.district[district[0]].observations
-					this.areaStats.state[state[0]].users = new Set([...this.areaStats.state[state[0]].users, ...this.areaStats.district[district[0]].users])
-					this.areaStats.state[state[0]].species = new Set([...this.areaStats.state[state[0]].species, ...this.areaStats.district[district[0]].species])
-					this.areaStats.region[region].observations += this.areaStats.district[district[0]].observations
-					this.areaStats.region[region].users = new Set([...this.areaStats.region[region].users, ...this.areaStats.district[district[0]].users])
-					this.areaStats.region[region].species = new Set([...this.areaStats.region[region].species, ...this.areaStats.district[district[0]].species])
-				})
-			})
-			Object.keys(this.areaStats).forEach((m) => {
-				Object.keys(this.areaStats[m]).forEach((a) => {
-					this.areaStats[m][a].users = this.areaStats[m][a].users.size ? this.areaStats[m][a].users.size : 0
-					this.areaStats[m][a].species = this.areaStats[m][a].species.size ? this.areaStats[m][a].species.size : 0
-				})
-			})
-			
+			let op = []
+            console.log(this.district_data)
+            return op			
 		},
 		get_total_observations(lists){
 			let total = 0
@@ -216,7 +173,7 @@ export default defineComponent({
 								.cells(6)
 		},			
 		renderMap () {
-			// this.init_area_stats()
+			this.init_area_stats()
 			this.init_legend()
 			
 			if (!d3.select("#map-container svg.svg-content").empty()) {

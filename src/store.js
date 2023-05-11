@@ -9,10 +9,12 @@ const store = createStore({
     test: jsonData,
     districts_list:{},
     joined_data: [],
+    district_data: []
   },
   mutations: {
     INIT_LOCATION_GROUPS(state) {
         let district_data = d3.groups(Object.values(jsonData.observations), d => d.district_id)
+        
         district_data.map((d) => {
             let current_district = jsonData.districts[d[0]]
             if(state.location_groups[current_district.region] == undefined){
@@ -46,6 +48,12 @@ const store = createStore({
               ...jsonData.districts[o.district_id],
               id_level: id_level,
           }
+        })
+        state.district_data = d3.groups(Object.values(jsonData.observations), d => d.district_id).map((d) => {
+          return [
+            state.districts_list[d[0]],
+            d[1]  
+          ]
         })
     },
     COMPUTE_SUPERLATIVES(state) {      
