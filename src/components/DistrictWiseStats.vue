@@ -1,4 +1,4 @@
-<style>
+<style scoped>
 :root{
     --primary: #933;
     --secondary: #454;
@@ -165,33 +165,32 @@ export default defineComponent({
         console.clear()
         // console.log(this.superlatives)
         // console.log(this.joined_data[0])
-        let data = d3.rollups(this.joined_data, v=> v.length, d => d.region, d => d.class, d => d.state)
-        let states = d3.groups(this.joined_data, d => d.region, d => d.state)
-        // console.log({states, data})
-        let max = {
-            north: {},
-            east: {},
-            south: {},
-            west: {},
-        }
-        data.forEach((region) => {
-            const region_name = region[0]
-            const region_data = region[1].sort((a,b) => b[1].length - a[1].length)
-            const region_states = states.filter((s) => s[0] == region_name)[0][1].map((rs) => rs[0])
-            let set_states = []
-            region_data.forEach((rd) => {
-                if(rd[0]){
-                    const sorted_data = rd[1].sort((a,b) => b[1].length - a[1].length)
-                    console.log(rd[0], rd[1], sorted_data)
-                    if(!set_states.includes(rd[1][0][0])){
-                        set_states.push(rd[1][0][0])
-                        max[region_name][rd[0]] = rd[1][0][0]
-                    }
-                }
-            })
-            console.log({region_name, region_states, set_states})
-        })
-        console.log(max)
+        // let data = d3.rollups(this.joined_data, v=> v.length, d => d.region, d => d.class, d => d.state)
+        // let states = d3.groups(this.joined_data, d => d.region, d => d.state)
+        // // console.log({states, data})
+        // let max = {
+        //     north: {},
+        //     east: {},
+        //     south: {},
+        //     west: {},
+        // }
+        // data.forEach((region) => {
+        //     const region_name = region[0]
+        //     const region_data = region[1].sort((a,b) => b[1].length - a[1].length)
+        //     const region_states = states.filter((s) => s[0] == region_name)[0][1].map((rs) => rs[0])
+        //     let set_states = []
+        //     region_data.forEach((rd) => {
+        //         if(rd[0]){
+        //             const sorted_data = rd[1].sort((a,b) => b[1].length - a[1].length)
+        //             if(!set_states.includes(rd[1][0][0])){
+        //                 set_states.push(rd[1][0][0])
+        //                 max[region_name][rd[0]] = rd[1][0][0]
+        //             }
+        //         }
+        //     })
+        //     console.log({region_name, region_states, set_states})
+        // })
+        // console.log({max})
     },
     computed: {
         ...mapState([
