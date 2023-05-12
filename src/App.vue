@@ -37,7 +37,7 @@
   <Map v-else />
 </template>
 
-<script lang="ts">
+<script lang="js">
   import { defineComponent } from 'vue'
   import ReadCSV from './components/ReadCSV.vue'
   import DistrictWiseStats from './components/DistrictWiseStats.vue'
