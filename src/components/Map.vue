@@ -3,13 +3,18 @@
 		font-size: 0.9rem !important;
 	}
 	
-	.map-boundary path{
-		/* stroke: transparent; */
+	.map-boundary path.state-boundary{
+		stroke-linejoin: round;
+		stroke-width: 0.5;
+		stroke:rgba(0, 0, 0, 1);
+		fill: none;
+	}
+	.map-boundary path:not(.state-boundary){
 		stroke-linejoin: round;
 		stroke-width: .25;
 		stroke:rgba(0, 0, 0, 0.5);
 	}
-	.map-boundary path:hover{
+	.map-boundary path:not(.state-boundary):hover{
 		cursor: pointer;
 		fill: beige;
 	}
@@ -282,6 +287,15 @@ export default defineComponent({
 					this.drawPolygonLabel(base_text, polygon)
 				}
 			})
+			if(this.polygon_mode == "districts"){
+				this.json.states.features.forEach((polygon) => {
+					this.drawPolygonBoundary(polygon)
+				})
+			} else if (this.polygon_mode == "states"){
+				this.json.regions.features.forEach((polygon) => {
+					this.drawPolygonBoundary(polygon)
+				})
+			}
 			
 			this.svg.append("g")
 				.attr("transform", "translate("+this.width*.5+", 50)")
@@ -289,6 +303,14 @@ export default defineComponent({
 			this.svg.call(this.zoom)
 
 			this.svg.call(this.zoom.transform, this.zoomTransform)
+		},
+		drawPolygonBoundary(polygon){
+			this.polygons.append("g")
+				.data([polygon])
+				.enter().append("path")
+				.classed("state-boundary", true)
+				.attr("d", this.path)
+				.attr("id", this.getPolygonId(polygon.properties))
 		},
 		drawPolygon(polygon){
 			this.polygons.append("g")
@@ -344,6 +366,12 @@ export default defineComponent({
 			const {region, state, district} = properties || {}
 			const {observations, users, unique_taxa, species_count, unidentified} = polygon_data || {}
 			const tooltip_data = { region, state, district, observations, users, unique_taxa, species_count, unidentified}
+			if(this.polygon_mode !== "districts"){
+				delete tooltip_data.district
+			}
+			if(this.polygon_mode === "regions"){
+				delete tooltip_data.state
+			}
 			let op = Object.entries(tooltip_data)
 				.map(([key, value]) => `<tr><td>${this.capitalizeWords(key)}</td><td>${value ? value: "-"}</td></tr>`)	
 			return `<table>${op.join('\n')}</table>`
@@ -372,6 +400,15 @@ export default defineComponent({
 		},
 		clicked(polygon_details) {
 			console.log(polygon_details)
+			if(this.polygon_mode == "districts"){
+				this.json.states.features.find((p) => {
+					if(p.properties.state == polygon_details.properties.state){
+						this.clicked_state(p)
+					}
+				})
+			}	
+		},
+		clicked_state(polygon_details){
 			const {region, state, district} = polygon_details.properties || {}
 			const polygon = polygon_details.geometry
 			this.tooltip.html(``).style('visibility', 'hidden')
