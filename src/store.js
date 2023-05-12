@@ -9,7 +9,12 @@ const store = createStore({
     test: jsonData,
     districts_list:{},
     joined_data: [],
-    district_data: []
+    district_data: [],
+    regional_data: {
+      districts: [],
+      states: [],
+      regions: [],
+    }
   },
   mutations: {
     INIT_LOCATION_GROUPS(state) {
@@ -49,12 +54,11 @@ const store = createStore({
               id_level: id_level,
           }
         })
-        state.district_data = d3.groups(Object.values(jsonData.observations), d => d.district_id).map((d) => {
-          return [
-            state.districts_list[d[0]],
-            d[1]  
-          ]
-        })
+        state.regional_data = {
+          districts: generateRegionalData(state.joined_data, "district"),
+          states: generateRegionalData(state.joined_data, "state"),
+          regions: generateRegionalData(state.joined_data, "region"),
+        }
     },
     COMPUTE_SUPERLATIVES(state) {      
       state.superlatives = {
@@ -64,7 +68,6 @@ const store = createStore({
         south: getMosts(state, getRegionData(state, "south")),
         west: getMosts(state, getRegionData(state, "west")),
       }
-      console.log(state.superlatives)
     }
   },
   actions: {
@@ -74,6 +77,7 @@ const store = createStore({
     },
     computeSuperlatives({commit}) {
       commit("COMPUTE_SUPERLATIVES")
+      console.log("COMPUTE_SUPERLATIVES")
     }
   },
   getters: {
@@ -286,6 +290,24 @@ function prune(data){
     districts: [...districts_covered]
   }
 }
+
+function generateRegionalData(data, key) {
+  return d3.groups(data, d => d[key]).map((d) => {
+    let first_record = d[1][0]
+    return {
+      [key]: first_record[key],
+      district: first_record.district,
+      state: first_record.state,
+      region: first_record.region,
+      observations: d[1].length,
+      users: d3.groups(d[1], o => o.user_id).length,
+      unique_taxa: d3.groups(d[1], o => o.taxon_id).length,
+      species_count: d3.groups(d[1], o => o.species).length - 1,
+      unidentified: d[1].filter((o) => o.id_level == null).length,
+    }
+  })
+}
+
 
 
 
