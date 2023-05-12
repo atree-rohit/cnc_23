@@ -33,7 +33,6 @@
       v-text="m"
     />
   </div>
-  +
   <Superlatives v-if="mode=='table'" />
   <Map v-else />
 </template>
