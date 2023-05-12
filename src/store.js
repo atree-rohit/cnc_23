@@ -262,8 +262,6 @@ function prune(data){
           op.taxa.taxa_wise[t][d][k] = data.taxa.taxa_wise[t][d][k]
           
           districts_covered.push(data.taxa.taxa_wise[t][d][k].district)
-          // console.log(1, JSON.stringify(...districts_covered))
-          // console.log(2, JSON.stringify(...districts_covered))
 
         }
       })
