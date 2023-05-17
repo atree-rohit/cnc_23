@@ -2,7 +2,20 @@
 	.switcher-sm .btn{
 		font-size: 0.9rem !important;
 	}
-	
+	#map{
+		display: flex;
+		justify-content: space-around;
+	}
+	#map #map-stats{
+		border: 1px solid pink;
+		width: 33%;
+		max-height: 80vh;
+		overflow:hidden;
+	}
+	#map-container {
+		display:flex;
+		justify-content: center;
+	}
 	.map-boundary path.state-boundary{
 		stroke-linejoin: round;
 		stroke-width: 0.5;
@@ -61,6 +74,17 @@
 	.small-text{
 		font-size: .85rem;
 	}
+	.legendCells:after{
+		content: "";
+		display:block;
+		width: 100%;
+		height: 100%;
+		background-color: #ffffff;
+  		border: 1px solid black;
+	}
+	/* .legendCells .cell{
+		stroke: transparent;
+	} */
 	.legendCells .cell text{
 		display: flex;
   		align-items: center;
@@ -103,7 +127,12 @@
 				v-text="dm"
 			/>
 		</div>
-		<div id="map-container"></div>
+		<div id="map">
+			<div id="map-container"></div>
+			<div id="map-stats">
+				<data-table	:table_data="selectedData" />
+			</div>
+		</div>
 	</div>
 </template>
 
@@ -116,8 +145,11 @@ import districts from '../assets/data/districts_rewind.json'
 import * as d3 from 'd3'
 import * as d3Legend from "d3-svg-legend"
 
+import DataTable from "./DataTable.vue"
+
 export default defineComponent({
     name: "Map",
+	components: {DataTable},
     data(){
         return {
 			polygon_modes: ["districts", "states", "regions"],
@@ -132,15 +164,21 @@ export default defineComponent({
 			colors: {},
 			legend: {},
 			state_data: {},
+			selected: {
+				region: null,
+				state: null,
+				district: null,
+			},
 			selected_area:"All",
 			max: 0,
 			state_max: 0,
-			height: window.innerHeight * 0.75,
-			width: window.innerWidth * 0.95,
+			height: 0,
+			width: 0,
 			tooltip:null,
         }
     },
     mounted(){
+		console.clear()
         this.init_tooltip()
 		this.init()
 		// if(this.regional_data.length > 0){
@@ -170,6 +208,22 @@ export default defineComponent({
 					value: d[this.data_mode]
 				}
 			})	
+		},
+		selectedData(){
+			let op = {}
+			if(this.selected.region){
+				op = {
+					region: this.regional_data.regions.find((d) => d.region == this.selected.region),
+					states: this.regional_data.states.filter((d) => d.region == this.selected.region),
+					districts: this.regional_data.districts.filter((d) => d.region == this.selected.region)
+				}
+			} else if(this.selected.state){
+				op = {
+					state: this.regional_data.states.find((d) => d.state == this.selected.state),
+					districts: this.regional_data.districts.filter((d) => d.state == this.selected.state)
+				}
+			}
+			return op
 		},
 		zoom() {
 			return d3.zoom()
@@ -210,11 +264,11 @@ export default defineComponent({
 			this.path = null
 			this.svg = {}
 			this.height = window.innerHeight * 0.8
-			this.width = this.$refs.mapDiv.clientWidth * 0.95
+			this.width = this.$refs.mapDiv.clientWidth * 0.65
 			if(window.innerWidth < 800){
 				this.projection = d3.geoMercator().scale(600).center([110, 20])
 			} else {
-				this.projection = d3.geoMercator().scale(800).center([65, 23])
+				this.projection = d3.geoMercator().scale(1200).center([80, 28])
 			}
 			this.path = d3.geoPath().projection(this.projection)
 			this.renderMap()
@@ -298,7 +352,8 @@ export default defineComponent({
 			}
 			
 			this.svg.append("g")
-				.attr("transform", "translate("+this.width*.5+", 50)")
+				.attr("class", "legend")
+				.attr("transform", "translate("+this.width*.55+", 25)")
 				.call(this.legend)
 			this.svg.call(this.zoom)
 
@@ -399,14 +454,47 @@ export default defineComponent({
 			})
 		},
 		clicked(polygon_details) {
-			console.log(polygon_details)
-			if(this.polygon_mode == "districts"){
+			const {region, state, district}	= polygon_details.properties || {}
+			if(state){
 				this.json.states.features.find((p) => {
 					if(p.properties.state == polygon_details.properties.state){
 						this.clicked_state(p)
 					}
 				})
-			}	
+			} else {
+				this.clicked_region(polygon_details)
+			}
+		},
+		clicked_region(polygon_details){
+			const region = polygon_details.properties.region
+			const polygon = polygon_details.geometry
+			this.tooltip.html(``).style('visibility', 'hidden')
+			let [[x0, y0], [x1, y1]] = [[0,0], [0,0]]
+			
+			d3.selectAll(".current-state").classed("current-state", false)
+			d3.selectAll(".selected-polygon").classed("selected-polygon", false)
+			if(this.selected.region == null || this.selected.region != region){
+				this.selected.region = region;
+				[[x0, y0], [x1, y1]] = this.path.bounds(polygon);
+				d3.select("#" + this.getPolygonId(polygon_details.properties)).classed("selected-polygon", true)
+			} else {
+				this.selected = {
+					district: null,
+					state: null,
+					region: null
+				};
+				[[x0, y0], [x1, y1]] = this.path.bounds(regions);
+			}
+			// this.selectArea()
+			
+			this.svg.transition().duration(750).call(
+				this.zoom.transform,
+				d3.zoomIdentity
+				.translate(this.width / 2, this.height / 2)
+				.scale(Math.min(8, 0.9 / Math.max((x1 - x0) / this.width, (y1 - y0) / this.height)))
+				.translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
+			)
+
 		},
 		clicked_state(polygon_details){
 			const {region, state, district} = polygon_details.properties || {}
@@ -416,15 +504,16 @@ export default defineComponent({
 			
 			d3.selectAll(".current-state").classed("current-state", false)
 			d3.selectAll(".selected-polygon").classed("selected-polygon", false)
-			if(this.selected_area == "All" || this.selected_area != name){
-				this.selected_area = name;
+			if(this.selected.state == null || this.selected.state != state){
+				this.selected.state = state;
 				[[x0, y0], [x1, y1]] = this.path.bounds(polygon);
 				d3.select("#" + this.getPolygonId(polygon_details.properties)).classed("selected-polygon", true)
-				if(this.mapMode == 2){
-					this.set_state_class(state, district)
-				}
 			} else {
-				this.selected_area = "All";
+				this.selected = {
+					district: null,
+					state: null,
+					region: null
+				};
 				[[x0, y0], [x1, y1]] = this.path.bounds(regions);
 			}
 			// this.selectArea()
