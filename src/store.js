@@ -1,9 +1,10 @@
 import { createStore } from 'vuex';
 import * as d3 from 'd3'
-import jsonData from './assets/data/all_data_20230511.json'
+import jsonData from './assets/data/all_data_20230517.json'
 
 const store = createStore({
   state: {
+    data_download_date: "17 May 2021 09:09 AM IST",
     location_groups: {},
     superlatives:{},
     test: jsonData,
@@ -292,8 +293,7 @@ function prune(data){
 function generateRegionalData(data, key) {
   return d3.groups(data, d => d[key]).map((d) => {
     let first_record = d[1][0]
-    return {
-      [key]: first_record[key],
+    let op = {
       district: first_record.district,
       state: first_record.state,
       region: first_record.region,
@@ -303,6 +303,13 @@ function generateRegionalData(data, key) {
       species_count: d3.groups(d[1], o => o.species).length - 1,
       unidentified: d[1].filter((o) => o.id_level == null).length,
     }
+    if(key == "region"){
+      delete op.district
+      delete op.state
+    } else if(key == "state"){
+      delete op.district
+    }
+    return op
   })
 }
 
