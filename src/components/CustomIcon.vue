@@ -22,7 +22,7 @@ export default defineComponent({
     props: ["icon"],
     methods:{
         getImageUrl(){
-            return `/public/icons/${this.icon}.png`
+            return `/icons/${this.icon}.png`
         }
     }
 })
