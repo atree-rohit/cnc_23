@@ -20,5 +20,23 @@
 }
 
 html, body{
-  height: 100%;
+  max-height: 100%;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
+  background-color: #ccc;
+}
+
+::-webkit-scrollbar-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 5px;
+  background-color: hsl(135, 5%, 45%);
+}
+
+::-webkit-scrollbar-thumb:hover{
+  background-color: hsl(35, 85%, 55%);
 }
