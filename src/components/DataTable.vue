@@ -160,18 +160,36 @@ export default defineComponent({
         dataSet(){
             return [0, undefined].indexOf(this.table_data?.districts?.length) == -1
         },
-        sortedData(){
-            let op = {}
+        preSortedData():{region: any, state: any, states: any, district: any, districts: any}{
+            let op:{region: any, state: any, states: any, district: any, districts: any} = {
+                region: null,
+                state: null,
+                states: null,
+                district: null,
+                districts: null
+
+            }
             if(this.dataSet){
                 Object.keys(this.table_data).forEach((k) => {
-                    op[k] = this.sort_data(this.table_data[k])
+                    op[k as keyof typeof op] = this.sort_data(this.table_data[k])
                 })
             }
+            console.log(op)
+            return op
+        },
+        sortedData():{region: any, state: any, states: any, district: any, districts: any}{
+            let op = JSON.parse(JSON.stringify(this.preSortedData))
+            Object.keys(op).forEach((k) => {
+                if(op[k] == null || op[k].length == 0){
+                    delete op[k]
+                }
+            })
             return op
         },
         overall_data(){
             let total = 0
             let current = 0
+            let selected_geography = ""
             let geography = ""
             if(this.type == "region"){
                 total = [...new Set (
@@ -181,6 +199,7 @@ export default defineComponent({
                         )].length
                 
                 current = this.table_data.states.length
+                selected_geography = "region"
                 geography = "states"
             } else if (this.type == "state"){
                 total = [...new Set (
@@ -190,14 +209,18 @@ export default defineComponent({
                         )].length
                 // total = districts.features.filter((f) => f.properties.state == this.table_data.state.state).map((f) => f.properties)
                 current = this.table_data.districts.length
+                selected_geography = "state"
                 geography = "districts"
             }
-            return `<b>${current}</b> of <b>${total}</b> ${geography} have recorded observations during City Nature Challenge, 2023`
+            return `<b>${current}</b> of <b>${total}</b> ${geography} in the selected ${selected_geography} have recorded observations during City Nature Challenge, 2023`
         }
     },
     methods:{
         format_number(num: number){
-			return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            if(Number.isInteger(num)){
+                return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+            }
+            return num
 		},
         sortColumn(col: string){
             if(col == this.sort_col){
