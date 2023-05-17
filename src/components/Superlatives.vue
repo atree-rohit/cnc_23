@@ -9,11 +9,11 @@
     border-collapse: collapse;
     margin: 1rem 0;
 }
-td, th{
+.table td, th{
     padding: .125rem;
 }
 
-th{
+.table th{
     background: black;
     color: white;
     font-size: 1.75rem;
@@ -68,7 +68,7 @@ th{
     background-color: rgba(51, 119, 153, .5);
 }
 
-td:has(.icon-label){
+.table td:has(.icon-label){
     display: flex;
     justify-content: end;
 }
