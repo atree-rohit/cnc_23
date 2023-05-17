@@ -20,6 +20,10 @@
   .switcher .btn:last-child{
     border-radius: 0 5rem 5rem 0;
   }
+  footer{
+    text-align: center;
+    padding: 0.5rem;
+  }
 </style>
 
 <template>
@@ -35,6 +39,9 @@
   </div>
   <Superlatives v-if="mode=='table'" />
   <Map v-else />
+  <footer>
+    Data Downloaded on {{ data_download_date }}
+  </footer>
 </template>
 
 <script lang="js">
@@ -44,6 +51,7 @@
   import Superlatives from './components/Superlatives.vue'
   import Map from './components/Map.vue'
   import store from './store'
+  import { mapState } from 'vuex'
 
   export default defineComponent({
     name: "App",
@@ -58,6 +66,9 @@
         modes: ['table', 'map'],
         mode: 'map',
       }
+    },
+    computed:{
+      ...mapState(['data_download_date']),
     },
     mounted(){
       store.dispatch('initLocationGroups')
