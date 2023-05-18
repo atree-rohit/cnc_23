@@ -225,6 +225,18 @@ export default defineComponent({
 					state: this.regional_data.states.find((d) => d.state == this.selected.state),
 					districts: this.regional_data.districts.filter((d) => d.state == this.selected.state)
 				}
+			} else if(this.polygon_mode == "districts"){
+				op = {
+					districts: this.regional_data.districts
+				}
+			} else if(this.polygon_mode == "states"){
+				op = {
+					states: this.regional_data.states
+				}
+			} else if(this.polygon_mode == "regions"){
+				op = {
+					regions: this.regional_data.regions
+				}
 			}
 			return op
 		},

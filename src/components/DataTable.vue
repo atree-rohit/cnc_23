@@ -120,7 +120,7 @@
                             <td v-for="col in fields" :key="col">{{ format_number(row[col]) }}</td>
                         </tr>
                         <tr v-else v-for="r in row" :key="r.district">
-                            <td>{{r.district}}</td>
+                            <td>{{placeName(r)}}</td>
                             <td v-for="col in fields" :key="col">{{ format_number(r[col]) }}</td>
                         </tr>
                     </template>
@@ -158,7 +158,8 @@ export default defineComponent({
             return op
         },
         dataSet(){
-            return [0, undefined].indexOf(this.table_data?.districts?.length) == -1
+            // return [0, undefined].indexOf(this.table_data?.districts?.length) == -1
+            return true
         },
         preSortedData():{region: any, state: any, states: any, district: any, districts: any}{
             let op:{region: any, state: any, states: any, district: any, districts: any} = {
@@ -174,7 +175,6 @@ export default defineComponent({
                     op[k as keyof typeof op] = this.sort_data(this.table_data[k])
                 })
             }
-            console.log(op)
             return op
         },
         sortedData():{region: any, state: any, states: any, district: any, districts: any}{
@@ -191,6 +191,7 @@ export default defineComponent({
             let current = 0
             let selected_geography = ""
             let geography = ""
+            let op = ""
             if(this.type == "region"){
                 total = [...new Set (
                             districts.features
@@ -199,7 +200,7 @@ export default defineComponent({
                         )].length
                 
                 current = this.table_data.states.length
-                selected_geography = "region"
+                selected_geography = `${this.table_data.region.region} region`
                 geography = "states"
             } else if (this.type == "state"){
                 total = [...new Set (
@@ -209,10 +210,14 @@ export default defineComponent({
                         )].length
                 // total = districts.features.filter((f) => f.properties.state == this.table_data.state.state).map((f) => f.properties)
                 current = this.table_data.districts.length
-                selected_geography = "state"
+                selected_geography = `${this.table_data.state.state} state`
                 geography = "districts"
             }
-            return `<b>${current}</b> of <b>${total}</b> ${geography} in the selected ${selected_geography} have recorded observations during City Nature Challenge, 2023`
+            op = `<b>${current}</b> of <b>${total}</b> ${geography} in the <u>${selected_geography}</u> have recorded observations during City Nature Challenge, 2023`
+            if(Object.keys(this.table_data).length == 1){
+                op = `Select a region or state to view stats`
+            }
+            return op
         }
     },
     methods:{
@@ -243,6 +248,15 @@ export default defineComponent({
             }
             
             return op
+        },
+        placeName(region: any){
+            if(region.district){
+                return region.district
+            } else if (region.state){
+                return region.state
+            } else if (region.region){
+                return region.region
+            }
         }
     }
 })
