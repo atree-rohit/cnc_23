@@ -4,10 +4,9 @@ import jsonData from './assets/data/all_data_20230517.json'
 
 const store = createStore({
   state: {
-    data_download_date: "17 May 2021 09:09 AM IST",
+    data_download_date: "17 May 2021, 09:09 AM IST",
     location_groups: {},
     superlatives:{},
-    test: jsonData,
     districts_list:{},
     joined_data: [],
     district_data: [],

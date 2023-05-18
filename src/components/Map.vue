@@ -8,7 +8,8 @@
 	}
 	#map #map-stats{
 		border: 1px solid pink;
-		width: 33%;
+		width: 50%;
+		margin: 0 5px;
 		max-height: 80vh;
 		overflow:hidden;
 	}
@@ -82,9 +83,11 @@
 		background-color: #ffffff;
   		border: 1px solid black;
 	}
-	/* .legendCells .cell{
-		stroke: transparent;
-	} */
+	.selected-polygon{
+		stroke: red !important;
+		stroke-width: 1.5px !important;
+		z-index: 100;
+	}
 	.legendCells .cell text{
 		display: flex;
   		align-items: center;
@@ -364,6 +367,11 @@ export default defineComponent({
 				.data([polygon])
 				.enter().append("path")
 				.classed("state-boundary", true)
+				.classed("selected-polygon", (d) => {
+					return ((this.selected.state && d.properties.state == this.selected.state) 
+					|| (this.selected.region && d.properties.region == this.selected.region))
+				})
+				.attr("properties", (d) => JSON.stringify(d.properties))
 				.attr("d", this.path)
 				.attr("id", this.getPolygonId(polygon.properties))
 		},
