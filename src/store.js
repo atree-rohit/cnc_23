@@ -1,10 +1,10 @@
 import { createStore } from 'vuex';
 import * as d3 from 'd3'
-import jsonData from './assets/data/all_data_20230517.json'
+import jsonData from './assets/data/all_data_20230519.json'
 
 const store = createStore({
   state: {
-    data_download_date: "17 May 2021, 09:09 AM IST",
+    data_download_date: "19 May 2021, 12:02 PM IST",
     location_groups: {},
     superlatives:{},
     districts_list:{},
